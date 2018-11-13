@@ -1,108 +1,89 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(~0);
 	session_start();
-$db_host = 'localhost'; 
+$username='';
+	$db_host = 'localhost'; 
 	$db_user = 'root'; 
 	$db_pass = 'mayur03'; 
-	$db_name = 'blog_details';
+	$db_name = 'registration';
 	$errors = array();
 // connect to the database
+
 $con=mysqli_connect($db_host, $db_user,$db_pass, $db_name);
 
-
- 
 if(mysqli_connect_errno()) {
     printf("Connect failed: %s\n", mysqli_connect_error());
     exit();
 }
 
-//if the submit button is clicked
 
-if(isset($_POST['save']))
+//if the rgister button is clicked
+
+if(isset($_POST['register']))
 {
-	$blogtype=mysqli_real_escape_string($con,$_POST['btype']);
-	$topic=mysqli_real_escape_string($con,$_POST['topic']);
-	$title=mysqli_real_escape_string($con,$_POST['title']);
-  
-  $textareablog = mysqli_real_escape_string($con,$_POST['textareablog']);
-  $exampleInputFile=mysqli_real_escape_string($con,$_POST['exampleInputFile']);
-$tag=mysqli_real_escape_string($con,$_POST['tag']);
+	$username=mysqli_real_escape_string($con,$_POST['username']);
+	$email=mysqli_real_escape_string($con,$_POST['email']);
+	$password_1=mysqli_real_escape_string($con,$_POST['password_1']);
+	$password_2=mysqli_real_escape_string($con,$_POST['password_2']);
 
-
-$name=mysqli_real_escape_string($con,$_POST['name']);
-$email=mysqli_real_escape_string($con,$_POST['email']);
-$mobile=mysqli_real_escape_string($con,$_POST['mbn']);
-$city=mysqli_real_escape_string($con,$_POST['city']);
-$state=mysqli_real_escape_string($con,$_POST['country']);
-
-}
 	//ensure that form fields are filled properly
-	if(empty($name))
+	if(empty($username))
 	{
-		array_push($errors,"Name is required");
+		array_push($errors,"Username is required");
 	}
 		if(empty($email))
 	{
 		array_push($errors,"Email is required");
 	}
-		if(empty($mobile))
+		if(empty($password_1))
 	{
-		array_push($errors,"Mobile number is required");
+		array_push($errors,"Password is required");
 	}
-	
-	if(empty($title))
-	{
-		array_push($errors,"Title is required");
+	if($password_1 != $password_2)
+	{	
+		array_push($errors , "The two passwords do not match");
 	}
-    
-		if(empty($textareablog))
-	{
-		array_push($errors,"Blog text is required");
-	}
-  	if(empty($exampleInputFile))
-	{
-		array_push($errors,"Photo is required");
-	}
-	
-  
-   	if(empty($city))
-	{
-		array_push($errors,"City is required");
-	}
-    
-    	if(empty($tag))
-	{
-		array_push($errors,"Tag is required");
-	}
-    	if(empty($topic))
-	{
-		array_push($errors,"Topic is required");
-	}
-    
-    	if(empty($blogtype))
-	{
-		array_push($errors,"Blog type is required");
-	}
-    
-   	if(empty($state))
-	{
-		array_push($errors,"State is required");
-	}
-	
-//if there are no errors , save user to database
+
+	//if there are no errors , save user to database
 
 	if (count($errors)==0)
 	{
-
-		$sql = "INSERT INTO blogs (blogtype, topic, title,blogtext,photo,tags,name,email,mobile,city,state) VALUES ('$blogtype','$topic', '$title','$textareablog','$exampleInputFile','$tag','$name','$email','$mobile','$city','$state')";
+		$password = md5($password_1);//encrypt password before storing in database(security)
+		$sql = "INSERT INTO users (username, email, password) VALUES ('$username','$email', '$password')";
 	
  
 $result=mysqli_query($con,$sql);
-if (! $result) { die('Error: ' . mysqli_error($con)); }
-echo "<div style='text-align:center;color: tomato;margin-top: 15px;'><h1>Record Added Successfully</h1></div>"; 
-mysqli_close($con);
- }
-	
+if (! $result) { die('Error: ' . mysqli_error($con)); } else{ echo'hi';
+//echo "<div style='text-align:center;color: tomato;margin-top: 15px;'>Record Added Successfully</div>"; mysqli_close($con);
+  	$_SESSION['username'] = $username;
+  	$_SESSION['success'] = "You are now logged in";
+  	header('location: index.php');}
+}
+	}
+
+// LOGIN USER
+if (isset($_POST['login_user'])) {
+  $username = mysqli_real_escape_string($con, $_POST['username']);
+  $password = mysqli_real_escape_string($con, $_POST['password']);
+
+  if (empty($username)) {
+  	array_push($errors, "Username is required");
+  }
+  if (empty($password)) {
+  	array_push($errors, "Password is required");
+  }
+
+  if (count($errors) == 0) {
+  	$password = md5($password);
+  	$query = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+  	$results = mysqli_query($con, $query);
+  	if (mysqli_num_rows($results) == 1) {
+  	  $_SESSION['username'] = $username;
+  	  $_SESSION['success'] = "You are now logged in";
+  	  header('location: index.php');
+  	}else {
+  		array_push($errors, "Wrong username/password combination");
+  	}
+  }
+}
 
 ?>
